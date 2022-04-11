@@ -86,6 +86,7 @@ public class PatientControllerTest {
 
         MvcResult storyResult = mockMvc.perform(MockMvcRequestBuilders
                         .put("/api/v1/staff/"+1)
+                        .header("staffUuid","4450a0d8-6dd3-44f3-a108-d3c85525a7be")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(postValue))
                 .andExpect(jsonPath("$.code", is(ResponseCodes.SUCCESSFUL.getCode())))
