@@ -5,9 +5,11 @@ import com.oze.hospitalrecords.dto.GenericResponse;
 import com.oze.hospitalrecords.dto.PatientDto;
 import com.oze.hospitalrecords.dto.PatientFinalResponse;
 import com.oze.hospitalrecords.dto.PatientResponse;
+import com.oze.hospitalrecords.exception.ForbiddenException;
 import com.oze.hospitalrecords.exception.NotFoundException;
 import com.oze.hospitalrecords.service.CsvExportService;
 import com.oze.hospitalrecords.service.PatientService;
+import com.oze.hospitalrecords.service.StaffService;
 import com.oze.hospitalrecords.util.Constants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Date;
@@ -29,6 +32,7 @@ public class PatientController {
 
   private final PatientService patientService;
   private final CsvExportService csvExportService;
+  private final StaffService staffService;
 
   /**
    * Method to view all patients
@@ -42,9 +46,11 @@ public class PatientController {
   public ResponseEntity<PatientFinalResponse> getAllPatients(@RequestParam(defaultValue = "0") int pageNum,
                                                                        @RequestParam(defaultValue = "10") int pageSize,
                                                                        @RequestParam(defaultValue = "age") String sortBy,
-                                                                       @RequestParam int age
+                                                                       @RequestParam int age,
+                                                             @RequestHeader("staffUuid") @NotBlank(message = "Staffuuid needed") String uuid
   )
   {
+    if(staffService.findByUUID(uuid) == null){throw new ForbiddenException(Constants.INVALID_STAFF_ID);}
     PatientFinalResponse patientFinalResponse = patientService.getAllPatients(pageNum,pageSize,sortBy,age);
     return new ResponseEntity<>(patientFinalResponse, new HttpHeaders(), HttpStatus.OK);
   }
@@ -55,7 +61,8 @@ public class PatientController {
    * @return returns a PatientResponse
    */
   @PostMapping
-  public ResponseEntity<PatientResponse> createPatient(@Valid @RequestBody PatientDto patientDto) {
+  public ResponseEntity<PatientResponse> createPatient(@Valid @RequestBody PatientDto patientDto, @RequestHeader("staffUuid") @NotBlank(message = "Staffuuid needed") String uuid) {
+    if(staffService.findByUUID(uuid) == null){throw new ForbiddenException(Constants.INVALID_STAFF_ID);}
     PatientResponse patientResponse = patientService.addPatient(patientDto);
     return new ResponseEntity<>(patientResponse, new HttpHeaders(), HttpStatus.OK);
   }
@@ -67,8 +74,8 @@ public class PatientController {
    * @return returns a PatientResponse
    */
   @PutMapping("/{id}")
-  public ResponseEntity<PatientResponse> updatePatient(@PathVariable int id, @Valid @RequestBody PatientDto patientDto) {
-
+  public ResponseEntity<PatientResponse> updatePatient(@RequestHeader("staffUuid") @NotBlank(message = "Staffuuid needed") String uuid, @PathVariable int id, @Valid @RequestBody PatientDto patientDto) {
+    if(staffService.findByUUID(uuid) == null){throw new ForbiddenException(Constants.INVALID_STAFF_ID);}
     PatientResponse patientResponse = patientService.updatePatient(id,patientDto);
     return new ResponseEntity<>(patientResponse, new HttpHeaders(), HttpStatus.OK);
   }
@@ -81,8 +88,8 @@ public class PatientController {
    * @return returns a CSV
    */
   @PutMapping("/writetocsv/{id}")
-  public void getAllEmployeesInCsv(HttpServletResponse servletResponse, @PathVariable  int id) throws IOException {
-
+  public void getAllEmployeesInCsv(HttpServletResponse servletResponse,@RequestHeader("staffUuid") @NotBlank(message = "Staffuuid needed") String uuid, @PathVariable  int id) throws IOException {
+    if(staffService.findByUUID(uuid) == null){throw new ForbiddenException(Constants.INVALID_STAFF_ID);}
     if(patientService.findById(id) == null)
     {
       throw new NotFoundException(Constants.PATIENT_NOT_FOUND);
@@ -99,7 +106,8 @@ public class PatientController {
    * @param endDate the endDate
    */
   @DeleteMapping("/removePatient/startDate/{startDate}/endDate/{endDate}")
-  public ResponseEntity<GenericResponse> removePatients(@PathVariable String startDate, @PathVariable String endDate) throws ParseException {
+  public ResponseEntity<GenericResponse> removePatients(@RequestHeader("staffUuid") @NotBlank(message = "Staffuuid needed") String uuid, @PathVariable String startDate, @PathVariable String endDate) throws ParseException {
+    if(staffService.findByUUID(uuid) == null){throw new ForbiddenException(Constants.INVALID_STAFF_ID);}
     GenericResponse genericResponse = patientService.removePatients(startDate,endDate);
     return new ResponseEntity<>(genericResponse, new HttpHeaders(), HttpStatus.OK);
   }

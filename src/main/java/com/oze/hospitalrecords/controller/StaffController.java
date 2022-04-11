@@ -2,13 +2,17 @@ package com.oze.hospitalrecords.controller;
 
 import com.oze.hospitalrecords.dto.*;
 import com.oze.hospitalrecords.enums.ResponseCodes;
+import com.oze.hospitalrecords.exception.ForbiddenException;
 import com.oze.hospitalrecords.service.StaffService;
+import com.oze.hospitalrecords.util.Constants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+
 
 
 @RestController
@@ -36,8 +40,8 @@ public class StaffController {
    * @return returns a StaffResponse
    */
   @PutMapping("/{id}")
-  public ResponseEntity<GenericResponse> updateStaff(@PathVariable int id, @Valid @RequestBody StaffDto staffDto) {
-
+  public ResponseEntity<GenericResponse> updateStaff(@PathVariable int id, @Valid @RequestBody StaffDto staffDto, @RequestHeader("staffUuid") @NotBlank(message = "Staffuuid needed") String uuid) {
+    if(staffService.findByUUID(uuid) == null){throw new ForbiddenException(Constants.INVALID_STAFF_ID);}
     staffService.updateStaff(id,staffDto);
     GenericResponse genericResponse =  new GenericResponse();
     genericResponse.setMessage(ResponseCodes.SUCCESSFUL.getDescription());

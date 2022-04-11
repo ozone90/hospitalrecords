@@ -36,6 +36,12 @@ public class StaffService {
         return staff==null?null:staff.toStaffResponse();
     }
 
+    public StaffResponse findByUUID(String uuid)
+    {
+        Staff staff =  staffRepository.findByUUID(uuid);
+        return staff==null?null:staff.toStaffResponse();
+    }
+
 
     public int updateStaff(int id, StaffDto staffDto)
     {

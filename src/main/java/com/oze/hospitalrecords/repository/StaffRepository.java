@@ -28,4 +28,6 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
 
     @Query("SELECT s FROM Staff s WHERE s.id =?1")
     Staff findStaffById(int id);
+    @Query("SELECT s FROM Staff s WHERE s.uuid =?1")
+    Staff findByUUID(String uuid);
 }
